@@ -55,7 +55,9 @@ export default class DFirstPerson extends GameState {
                 let etalonTransport = this.scene.getControl(playerTransport, ROOT_CONTAINER);
                 let transportContainer = etalonTransport = this.cloneEtalonTransport(etalonTransport, index, playerTransport, positions, createOrder);
                 this.tintPlayer(transportContainer, playerTransport, this.scene.colorToNumber(personMembersArray[index].colorPerson));
-                this.animatePlayer(playerTransport, transportContainer);
+                if (this.animatePlayer(playerTransport)) {
+                    this.startPlayerMove(transportContainer.nickname);
+                };
                 this.scene.addPlayerIcon(personMembersArray[index], index, playerTransport, transportContainer);
 
             }
@@ -168,13 +170,12 @@ export default class DFirstPerson extends GameState {
     }
 
     /**
-     * Анимируем учасников гонки, которые находятся впереди нас
+     * Нужно ли анимировать учасников гонки, которые находятся впереди нас
      * @param {String} playerTransport транспорт игрока
-     * @param {Container} transportContainer контейнер с транспортом игрока
      */
-    animatePlayer(playerTransport: string, transportContainer: Container): void {
+    animatePlayer(playerTransport: string): boolean {
         if (playerTransport === 'quadro') {
-            this.startPlayerMove(transportContainer.nickname);
+            return true;
         }
     }
 
