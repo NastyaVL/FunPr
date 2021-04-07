@@ -9,7 +9,7 @@ const RACE_FRONT_VIEW_CONTAINER = [
     'rat_racefrontview_container'
 ];
 
-const personMembersArray = [];
+let personMembersArray = [];
 
 export default class DFirstPerson extends GameState {
     protected scene: VehicleRace;
@@ -23,30 +23,6 @@ export default class DFirstPerson extends GameState {
         this.addRunningPlayers(this.scene.sm.options);
     }
 
-    allTransportInvisible(): void {
-        const mainContainer = this.scene.getControl('main') as Container;
-        RACE_FRONT_VIEW_CONTAINER.forEach((item) => {
-            let container = this.scene.getControl(item) as Container;
-            if (container) {
-                container.parent = mainContainer;
-                delete this.scene.controls[ROOT_CONTAINER][container.nickname];
-                this.scene.controls[mainContainer.nickname][container.nickname] = container;
-            } else {
-                container = this.scene.getControl(
-                    item,
-                    mainContainer.nickname
-                ) as Container;
-            }
-            this.scene.getControl(item, MAIN_CONTAINER_NAME).visible = false;
-        });
-    }
-
-    chooseCurrentTransport(transport: string): void {
-        const view = this.scene.getControl(`${transport}_racefrontview_container`, MAIN_CONTAINER_NAME);
-        view.visible = true;
-        view.createOrder = view.parent.children.length;
-    }
-
     addRunningPlayers(data: any): void {
         let transportContainer;
         let createOrder = 1000;
@@ -54,17 +30,11 @@ export default class DFirstPerson extends GameState {
 
         this.allTransportInvisible();
         const membersSorted = Object.values(data.gameOptions.configMembers)
-        const isUserPlace = Object.values(membersSorted).findIndex((item) => item.isUser ) + 1;
-        const isUserTransport = Object.values(membersSorted)[isUserPlace].transport;
+        const isUserPlace = membersSorted.findIndex((item) => item.isUser ) + 1;
+        const isUserTransport = membersSorted[isUserPlace].transport;
         this.chooseCurrentTransport(isUserTransport);
         const positions = this.getPlayerPositions(isUserPlace);
-
-        for (let i = isUserPlace - 2; i >= 0; i--) {
-            if (personMembersArray.length >= 3) {
-                break;
-            }
-            personMembersArray.push(Object.values(membersSorted)[i]);
-        }
+        personMembersArray = this.choosePersons(isUserPlace, membersSorted, personMembersArray);
 
         for (let index = personMembersArray.length - 1; index >= 0; index--) {
             const isShow = index < personMembersArray.length;
@@ -78,42 +48,90 @@ export default class DFirstPerson extends GameState {
                 if (!Loader.additionalTypes.includes(playerTransport)) {
                     throw new Error(`${playerTransport} not loaded`);
                 }
-                const etalonTransport = this.scene.getControl(playerTransport, ROOT_CONTAINER);
-                transportContainer = etalonTransport.clone({
-                    nickname: `${playerTransport}_${index}`,
-                    parentNickname: MAIN_CONTAINER_NAME
-                });
-
-                transportContainer.createOrder = ++createOrder;
-                transportContainer.x = positions[index].x;
-                transportContainer.y = positions[index].y;
-
-                transportContainer.visible = true;
-                if (playerTransport === 'quadro') {
-                    transportContainer.children.forEach((c) => {
-                        if (c.nickname.includes('_color')) {
-                            (c as Picture | Anim).tint = personMembersArray[index].colorPerson;
-                        }
-                    });
-                }
-                if (playerTransport === 'rat') {
-                    transportContainer.children.forEach((c) => {
-                        if (c.nickname.includes('_color')) {
-                            if (c.nickname.includes('_color2')) {
-                                (c as Picture | Anim).tint = [0xcc5500, 0x082567, 0x008080][Math.floor(Math.random() * 3)];
-                            } else if (c.nickname.includes('_color3')) {
-                                (c as Picture | Anim).tint = [0xaac688, 0xbdb76b, 0xaddfad][Math.floor(Math.random() * 3)];
-                            } else {
-                                (c as Picture | Anim).tint = personMembersArray[index].colorPersonint;
-                            }
-                        }
-                    });
-                }
+                let etalonTransport = this.scene.getControl(playerTransport, ROOT_CONTAINER);
+                etalonTransport = this.etalonTransportMethod(transportContainer, etalonTransport, index, playerTransport, positions, createOrder);
+                this.tintPlayer(transportContainer, playerTransport, this.scene.colorToNumber(personMembersArray[index].colorPerson));
                 this.animatePlayer(playerTransport, transportContainer);
                 this.scene.addPlayerIcon(personMembersArray[index], index, playerTransport, transportContainer);
 
             }
         }
+    }
+
+    // Делаем весь транспорт невидимым
+    allTransportInvisible(): void {
+        const mainContainer = this.scene.getControl('main') as Container;
+        RACE_FRONT_VIEW_CONTAINER.forEach((item) => {
+            let container = this.scene.getControl(item) as Container;
+            if (container) {
+                this.changeContainer(container, mainContainer);
+            } else {
+                container = this.scene.getControl(item, mainContainer.nickname) as Container;
+            }
+            this.scene.getControl(item, MAIN_CONTAINER_NAME).visible = false;
+        });
+    }
+
+    etalonTransportMethod(transportContainer, etalonTransport, index, playerTransport, positions, createOrder): Container {
+        transportContainer = etalonTransport.clone({
+            nickname: `${playerTransport}_${index}`,
+            parentNickname: MAIN_CONTAINER_NAME
+        });
+        transportContainer.createOrder = ++createOrder;
+        transportContainer.x = positions[index].x;
+        transportContainer.y = positions[index].y;
+        transportContainer.visible = true;
+        return transportContainer;
+    }
+
+    // Поменяем родителей
+    changeContainer(container, mainContainer): void {
+        container.parent = mainContainer;
+        delete this.scene.controls[ROOT_CONTAINER][container.nickname];
+        this.scene.controls[mainContainer.nickname][container.nickname] = container;      
+    }
+
+    // Красим персонажей
+    tintPlayer(transportContainer: Container, playerTransport: string, tint: number): void {
+        if (playerTransport === 'quadro') {
+            transportContainer.children.forEach((c) => {
+                if (c.nickname.includes('_color')) {
+                    (c as Picture | Anim).tint = tint;
+                }
+            });
+        }
+        if (playerTransport === 'rat') {
+            transportContainer.children.forEach((c) => {
+                if (c.nickname.includes('_color')) {
+                    if (c.nickname.includes('_color2')) {
+                        (c as Picture | Anim).tint = [0xcc5500, 0x082567, 0x008080][Math.floor(Math.random() * 3)];
+                    } else if (c.nickname.includes('_color3')) {
+                        (c as Picture | Anim).tint = [0xaac688, 0xbdb76b, 0xaddfad][Math.floor(Math.random() * 3)];
+                    } else {
+                        (c as Picture | Anim).tint = tint;
+                    }
+                }
+            });
+        }
+    }
+
+    // Выбираем игроков, которых будем отображать на сцене
+    choosePersons(isUserPlace: number, members: object, array):Array<any> {
+        let arr = array.slice();
+        for (let i = isUserPlace - 2; i >= 0; i--) {
+            if (arr.length >= 3) {
+                break;
+            }
+            arr.push(Object.values(members)[i]);
+        }
+        return arr;
+    }
+
+    // Выбираем текущий транспорт
+    chooseCurrentTransport(transport: string): void {
+        const view = this.scene.getControl(`${transport}_racefrontview_container`, MAIN_CONTAINER_NAME);
+        view.visible = true;
+        view.createOrder = view.parent.children.length;
     }
 
     animatePlayer(playerTransport: string, transportContainer: Container): void {
