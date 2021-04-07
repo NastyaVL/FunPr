@@ -2,15 +2,13 @@ import {Container, GameState, Tween, Anim, Loader, Picture} from 'MotivationGame
 import {IPoint, ROOT_CONTAINER } from '../../../_core/Interfaces';
 import VehicleRace from '../VehicleRace';
 
+// Название главного контейнера в игре
 const MAIN_CONTAINER_NAME = 'main';
-
+// Массив выбранных транспортов для игры
 const RACE_FRONT_VIEW_CONTAINER = [
     'quadro_racefrontview_container',
     'rat_racefrontview_container'
 ];
-
-let personMembersArray = [];
-
 export default class DFirstPerson extends GameState {
     protected scene: VehicleRace;
 
@@ -18,17 +16,23 @@ export default class DFirstPerson extends GameState {
         return 'FirstPerson';
     }
 
+    // Начальное состояние стейта
     start(): void {
         super.start();
         this.addRunningPlayers(this.scene.sm.options);
     }
 
+    /**
+     * Добавляем учасников гонки на сцену 
+     */
     addRunningPlayers(data: any): void {
-        let transportContainer;
+        // Массив учасников гонки, стоящих перед нами в списке
+        let personMembersArray = [];
+        // Последовательность наложения слоёв
         let createOrder = 1000;
         let abc;
 
-        this.allTransportInvisible();
+        this.makeAllTransportInvisibleAndChangeContainer();
         const membersSorted = Object.values(data.gameOptions.configMembers)
         const isUserPlace = membersSorted.findIndex((item) => item.isUser ) + 1;
         const isUserTransport = membersSorted[isUserPlace].transport;
@@ -38,8 +42,8 @@ export default class DFirstPerson extends GameState {
 
         for (let index = personMembersArray.length - 1; index >= 0; index--) {
             const isShow = index < personMembersArray.length;
-
             const playerTransport = personMembersArray[index].transport;
+
             abc = this.scene.getControl(`${playerTransport}_${index}`, MAIN_CONTAINER_NAME);
             if (abc !== undefined) {
                 abc.destroy({ children: true });
@@ -49,7 +53,7 @@ export default class DFirstPerson extends GameState {
                     throw new Error(`${playerTransport} not loaded`);
                 }
                 let etalonTransport = this.scene.getControl(playerTransport, ROOT_CONTAINER);
-                etalonTransport = this.etalonTransportMethod(transportContainer, etalonTransport, index, playerTransport, positions, createOrder);
+                let transportContainer = etalonTransport = this.cloneEtalonTransport(etalonTransport, index, playerTransport, positions, createOrder);
                 this.tintPlayer(transportContainer, playerTransport, this.scene.colorToNumber(personMembersArray[index].colorPerson));
                 this.animatePlayer(playerTransport, transportContainer);
                 this.scene.addPlayerIcon(personMembersArray[index], index, playerTransport, transportContainer);
@@ -58,8 +62,12 @@ export default class DFirstPerson extends GameState {
         }
     }
 
-    // Делаем весь транспорт невидимым
-    allTransportInvisible(): void {
+    /**
+     * Подготовка к началу гонки
+     * Делаем все контейнеры с транспортами невидимыми
+     * Переносим транспорт из одного контейнера в другой
+     */
+    makeAllTransportInvisibleAndChangeContainer(): void {
         const mainContainer = this.scene.getControl('main') as Container;
         RACE_FRONT_VIEW_CONTAINER.forEach((item) => {
             let container = this.scene.getControl(item) as Container;
@@ -72,8 +80,16 @@ export default class DFirstPerson extends GameState {
         });
     }
 
-    etalonTransportMethod(transportContainer, etalonTransport, index, playerTransport, positions, createOrder): Container {
-        transportContainer = etalonTransport.clone({
+    /**
+     * Делаем копии контейнеров с транспортами и расставляем их по координатам в игре
+     * @param etalonTransport 
+     * @param index 
+     * @param playerTransport 
+     * @param positions 
+     * @param createOrder 
+     */
+    cloneEtalonTransport(etalonTransport, index, playerTransport, positions, createOrder): Container {
+        let transportContainer = etalonTransport.clone({
             nickname: `${playerTransport}_${index}`,
             parentNickname: MAIN_CONTAINER_NAME
         });
@@ -84,14 +100,23 @@ export default class DFirstPerson extends GameState {
         return transportContainer;
     }
 
-    // Поменяем родителей
-    changeContainer(container, mainContainer): void {
+    /**
+     * Изменяем контейнеры родителей у детей
+     * @param {Container} container текущий контейнер
+     * @param {Container} mainContainer основной контейнер игры
+     */
+    changeContainer(container: Container, mainContainer: Container): void {
         container.parent = mainContainer;
         delete this.scene.controls[ROOT_CONTAINER][container.nickname];
         this.scene.controls[mainContainer.nickname][container.nickname] = container;      
     }
 
-    // Красим персонажей
+    /**
+     * Тонируем учасника гонки
+     * @param {Container} transportContainer контейнер со всеми элементами транспорта
+     * @param {String} playerTransport транспорт текущего учасника
+     * @param {Number} tint цвет текущего учасника
+     */
     tintPlayer(transportContainer: Container, playerTransport: string, tint: number): void {
         if (playerTransport === 'quadro') {
             transportContainer.children.forEach((c) => {
@@ -115,8 +140,13 @@ export default class DFirstPerson extends GameState {
         }
     }
 
-    // Выбираем игроков, которых будем отображать на сцене
-    choosePersons(isUserPlace: number, members: object, array):Array<any> {
+    /**
+     * Выбираем игроков, которых будем отображать на сцене
+     * @param {Number} isUserPlace место текущего учасника
+     * @param {Object} members учасники
+     * @param {Array} array массив учасников
+     */
+    choosePersons(isUserPlace: number, members: object, array: Array<any>):Array<any> {
         let arr = array.slice();
         for (let i = isUserPlace - 2; i >= 0; i--) {
             if (arr.length >= 3) {
@@ -127,19 +157,31 @@ export default class DFirstPerson extends GameState {
         return arr;
     }
 
-    // Выбираем текущий транспорт
+    /**
+     * Выбираем текущий транспорт (транспорт, на котором едем мы)
+     * @param {String} transport 
+     */
     chooseCurrentTransport(transport: string): void {
         const view = this.scene.getControl(`${transport}_racefrontview_container`, MAIN_CONTAINER_NAME);
         view.visible = true;
         view.createOrder = view.parent.children.length;
     }
 
+    /**
+     * Анимируем учасников гонки, которые находятся впереди нас
+     * @param {String} playerTransport транспорт игрока
+     * @param {Container} transportContainer контейнер с транспортом игрока
+     */
     animatePlayer(playerTransport: string, transportContainer: Container): void {
         if (playerTransport === 'quadro') {
             this.startPlayerMove(transportContainer.nickname);
         }
     }
 
+    /**
+     * Расставляем учасников гонки, которые находятся перед нами, по позициям на сцене игры
+     * @param {Number} n наше место в рейтинге 
+     */
     getPlayerPositions(n: number): IPoint[] {
         if (n === 1) {
             return this.getPlayerPosition1();
@@ -179,6 +221,10 @@ export default class DFirstPerson extends GameState {
         ];
     }
 
+    /**
+     * Анимируем движение контейнера учасника, стоящего перед нами
+     * @param {String} nameContainer название контейнера
+     */
     startPlayerMove(nameContainer: string): void {
         const r = Math.random() / 10;
         const player = this.scene.getControl('body', nameContainer);
