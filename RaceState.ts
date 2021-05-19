@@ -121,25 +121,33 @@ export default class DFirstPerson extends GameState {
      */
     tintPlayer(transportContainer: Container, playerTransport: string, tint: number): void {
         if (playerTransport === 'quadro') {
-            transportContainer.children.forEach((c) => {
-                if (c.nickname.includes('_color')) {
-                    (c as Picture | Anim).tint = tint;
-                }
-            });
+            this.tintPlayerHelperQuadro(transportContainer, tint);
         }
         if (playerTransport === 'rat') {
-            transportContainer.children.forEach((c) => {
-                if (c.nickname.includes('_color')) {
-                    if (c.nickname.includes('_color2')) {
-                        (c as Picture | Anim).tint = [0xcc5500, 0x082567, 0x008080][Math.floor(Math.random() * 3)];
-                    } else if (c.nickname.includes('_color3')) {
-                        (c as Picture | Anim).tint = [0xaac688, 0xbdb76b, 0xaddfad][Math.floor(Math.random() * 3)];
-                    } else {
-                        (c as Picture | Anim).tint = tint;
-                    }
-                }
-            });
+            this.tintPlayerHelperRat(transportContainer, tint);
         }
+    }
+
+    tintPlayerHelperQuadro(transportContainer: Container, tint: number): void {
+        transportContainer.children.forEach((c) => {
+            if (c.nickname.includes('_color')) {
+                (c as Picture | Anim).tint = tint;
+            }
+        });
+    }
+
+    tintPlayerHelperRat(transportContainer: Container, tint: number): void {
+        transportContainer.children.forEach((c) => {
+            if (c.nickname.includes('_color')) {
+                if (c.nickname.includes('_color2')) {
+                    (c as Picture | Anim).tint = [0xcc5500, 0x082567, 0x008080][Math.floor(Math.random() * 3)];
+                } else if (c.nickname.includes('_color3')) {
+                    (c as Picture | Anim).tint = [0xaac688, 0xbdb76b, 0xaddfad][Math.floor(Math.random() * 3)];
+                } else {
+                    (c as Picture | Anim).tint = tint;
+                }
+            }
+        });
     }
 
     /**
