@@ -183,41 +183,25 @@ export default class DFirstPerson extends GameState {
      */
     getPlayerPositions(n: number): IPoint[] {
         if (n === 1) {
-            return this.getPlayerPosition1();
+            return [];
         }
         if (n === 2) {
-            return this.getPlayerPosition2();
+            return [
+                {x: 720, y: 420}
+            ];
         }
         if (n === 3) {
-            return this.getPlayerPosition3();
+            return [
+                {x: 800, y: 400},
+                {x: 600, y: 400}
+            ];
         } else {
-            return this.getPlayerPosition4();
+            return [
+                {x: 800, y: 400},
+                {x: 700, y: 350},
+                {x: 600, y: 400}
+            ];
         }
-    }
-
-    getPlayerPosition1(): IPoint[] {
-        return [];
-    }
-
-    getPlayerPosition2(): IPoint[] {
-        return [
-            {x: 720, y: 420}
-        ];
-    }
-
-    getPlayerPosition3(): IPoint[] {
-        return [
-            {x: 800, y: 400},
-            {x: 600, y: 400}
-        ];
-    }
-
-    getPlayerPosition4(): IPoint[] {
-        return [
-            {x: 800, y: 400},
-            {x: 700, y: 350},
-            {x: 600, y: 400}
-        ];
     }
 
     /**
