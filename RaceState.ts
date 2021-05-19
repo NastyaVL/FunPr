@@ -209,6 +209,10 @@ export default class DFirstPerson extends GameState {
      * @param {String} nameContainer название контейнера
      */
     startPlayerMove(nameContainer: string): void {
+        this.startPlayerMoveHelper(nameContainer);
+    }
+
+    startPlayerMoveHelper(nameContainer: string): void {
         const r = Math.random() / 10;
         const player = this.scene.getControl('body', nameContainer);
         const player2 = this.scene.getControl('body_color_mask', nameContainer);
