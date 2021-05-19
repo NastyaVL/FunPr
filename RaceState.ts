@@ -174,9 +174,7 @@ export default class DFirstPerson extends GameState {
      * @param {String} playerTransport транспорт игрока
      */
     animatePlayer(playerTransport: string): boolean {
-        if (playerTransport === 'quadro') {
-            return true;
-        }
+        return playerTransport === 'quadro';
     }
 
     /**
