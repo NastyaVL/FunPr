@@ -91,14 +91,19 @@ export default class DFirstPerson extends GameState {
      * @param createOrder 
      */
     cloneEtalonTransport(etalonTransport, index, playerTransport, positions, createOrder): Container {
-        let transportContainer = etalonTransport.clone({
-            nickname: `${playerTransport}_${index}`,
-            parentNickname: MAIN_CONTAINER_NAME
-        });
+        let transportContainer = this.cloneEtalonTransportHelper(etalonTransport, index, playerTransport);
         transportContainer.createOrder = ++createOrder;
         transportContainer.x = positions[index].x;
         transportContainer.y = positions[index].y;
         transportContainer.visible = true;
+        return transportContainer;
+    }
+
+    cloneEtalonTransportHelper(etalonTransport, index, playerTransport): Container {
+        let transportContainer = etalonTransport.clone({
+            nickname: `${playerTransport}_${index}`,
+            parentNickname: MAIN_CONTAINER_NAME
+        });
         return transportContainer;
     }
 
