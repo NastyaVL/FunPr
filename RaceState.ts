@@ -162,6 +162,10 @@ export default class DFirstPerson extends GameState {
      * @param {Array} array массив учасников
      */
     choosePersons(isUserPlace: number, members: object, array: Array<any>):Array<any> {
+        return this.choosePersonsHelper(isUserPlace, members, array);
+    }
+
+    choosePersonsHelper(isUserPlace: number, members: object, array: Array<any>): Array<any> {
         let arr = array.slice();
         for (let i = isUserPlace - 2; i >= 0; i--) {
             if (arr.length >= 3) {
