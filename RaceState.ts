@@ -181,9 +181,13 @@ export default class DFirstPerson extends GameState {
      * @param {String} transport 
      */
     chooseCurrentTransport(transport: string): void {
-        const view = this.scene.getControl(`${transport}_racefrontview_container`, MAIN_CONTAINER_NAME);
+        const view = this.chooseCurrentTransportHelper(transport);
         view.visible = true;
         view.createOrder = view.parent.children.length;
+    }
+
+    chooseCurrentTransportHelper(transport: string): Container {
+        return this.scene.getControl(`${transport}_racefrontview_container`, MAIN_CONTAINER_NAME);
     }
 
     /**
